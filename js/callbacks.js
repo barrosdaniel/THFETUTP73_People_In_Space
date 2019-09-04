@@ -3,7 +3,7 @@ const wikiUrl = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
 const peopleList = document.getElementById('people');
 const btn = document.querySelector('button');
 
-// Make an AJAX request
+// Make AJAX request to retrieve data from astros API, passing in function to retrieve profiles from wiki API
 function getJSON(url, callback) {
   const xhr = new XMLHttpRequest();
   xhr.open('GET', url);
@@ -34,6 +34,7 @@ function generateHTML(data) {
   `;
 }
 
+// Click button event listener
 btn.addEventListener('click', (event) => {
   getJSON(astrosUrl, getProfiles);
   event.target.remove();
