@@ -16,6 +16,7 @@ function getJSON(url, callback) {
   xhr.send();
 }
 
+// Function passed into AJAX request that is executed after the AJAX request is finished. Function retrieves profiles from wiki API and calls function to generate HTML tile with each record data
 function getProfiles(json) {
   json.people.map(person => {
     getJSON(wikiUrl + person.name, generateHTML);
@@ -26,12 +27,19 @@ function getProfiles(json) {
 function generateHTML(data) {
   const section = document.createElement('section');
   peopleList.appendChild(section);
-  section.innerHTML = `
-    <img src=${data.thumbnail.source}>
-    <h2>${data.title}</h2>
-    <p>${data.description}</p>
-    <p>${data.extract}</p>
+  if (data.type === "standard") {
+    section.innerHTML = `
+      <img src=${data.thumbnail.source}>
+      <h2>${data.title}</h2>
+      <p>${data.description}</p>
+      <p>${data.extract}</p>
+      `;
+  } else {
+    section.innerHTML = `
+      <h2>${data.title}</h2>
+      <p>No description available</p>
   `;
+  }
 }
 
 // Click button event listener
