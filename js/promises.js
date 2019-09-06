@@ -3,36 +3,65 @@ const wikiUrl = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
 const peopleList = document.getElementById('people');
 const btn = document.querySelector('button');
 
-function getJSON(url, callback) {
-  const xhr = new XMLHttpRequest();
-  xhr.open('GET', url);
-  xhr.onload = () => {
-    if(xhr.status === 200) {
-      let data = JSON.parse(xhr.responseText);
-      return callback(data);
-    }
-  };
-  xhr.send();
+// Make AJAX request to retrieve data from astros API, passing in function to retrieve profiles from wiki API
+function getJSON(url) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+
+    xhr.open('GET', url);
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        let data = JSON.parse(xhr.responseText);
+        resolve(data);
+      } else {
+        reject(Error(xhr.statusText));
+      }
+    };
+
+    xhr.onerror = () => reject(Error('A network error occurred.'));
+
+    xhr.send();
+
+  });
 }
 
+// Function passed into AJAX request that is executed after the AJAX request is finished. Function retrieves profiles from wiki API and calls function to generate HTML tile with each record data
 function getProfiles(json) {
-  json.people.map( person => {
-    getJSON(wikiUrl + person.name, generateHTML);      
-  }); 
-}
+  const profiles = json.people.map(person => {
+    return getJSON(wikiUrl + person.name);
+  });
+  return Promise.all(profiles);
+};
 
+// Generate the markup for each profile
 function generateHTML(data) {
-  const section = document.createElement('section');
-  peopleList.appendChild(section);
-  section.innerHTML = `
-    <img src=${data.thumbnail.source}>
-    <h2>${data.title}</h2>
-    <p>${data.description}</p>
-    <p>${data.extract}</p>
-  `;
+  data.map(person => {
+    const section = document.createElement('section');
+    peopleList.appendChild(section);
+    if (person.type === "standard") {
+      section.innerHTML = `
+      <img src=${person.thumbnail.source}>
+      <h2>${person.title}</h2>
+      <p>${person.description}</p>
+      <p>${person.extract}</p>`;
+    } else {
+      section.innerHTML = `
+      <h2>${person.title}</h2>
+      <p>No description available</p>`;
+    }
+  })
+
 }
 
+// Click button event listener
 btn.addEventListener('click', (event) => {
-  getJSON(astrosUrl, getProfiles);
+
+  getJSON(astrosUrl)
+    .then(getProfiles)
+    .then(generateHTML)
+    .catch(err => console.log(err));
+
   event.target.remove();
+
 });
