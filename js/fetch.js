@@ -6,8 +6,15 @@ const btn = document.querySelector('button');
 // Function passed into AJAX request that is executed after the AJAX request is finished. Function retrieves profiles from wiki API and calls function to generate HTML tile with each record data
 function getProfiles(json) {
   const profiles = json.people.map(person => {
+    const craft = person.craft;
     return fetch(wikiUrl + person.name)
       .then(response => response.json())
+      .then(profile => {
+        return {
+          ...profile,
+          craft
+        }
+      })
       .catch(err => console.log('Error fetching with the wiki API', err));
   });
   return Promise.all(profiles);
@@ -21,13 +28,14 @@ function generateHTML(data) {
     if (person.type === "standard") {
       section.innerHTML = `
       <img src=${person.thumbnail.source}>
+      <span>${person.craft}</span>
       <h2>${person.title}</h2>
       <p>${person.description}</p>
       <p>${person.extract}</p>`;
     } else {
       section.innerHTML = `
       <h2>${person.title}</h2>
-      <p>No description available</p>`;
+      <p>No information available</p>`;
     }
   })
 }
